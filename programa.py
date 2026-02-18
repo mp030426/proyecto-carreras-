@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from PIL import Image, ImageTk
+from datetime import datetime
 #conexion y usuarios
 client = MongoClient("mongodb://localhost:27017/")
 db = client["galgos"]
@@ -106,7 +107,7 @@ def habilitar_botones():
                     widget.config(state="disabled")
             else:
                 widget.config(state="disabled")
-
+#funciones CRUD
 def buscar():
     global cliente_autenticado
 
@@ -120,9 +121,6 @@ def buscar():
             origen = origen_perro.get().strip()
             edad = edad_perro.get().strip()
             color = color_perro.get().strip()
-
-
-
 
 
             filtro = {}
@@ -203,14 +201,264 @@ def buscar():
 
         tk.Button(ventana_perros, text="BUSCAR", command=buscar_perro).pack(pady=10)
 
-    def buscar_dueño():
-        print("Buscando dueño...")
+    def opcion_dueño():
+        def buscar_dueño():
+            nombre=nombre_dueño.get().strip()
+            telefono=telefono_dueño.get().strip()
 
-    def buscar_cuidador():
-        print("Buscando cuidador...")
+            filtro = {}
 
-    def buscar_carreras():
-        print("Buscando carreras...")
+            if nombre:
+                filtro["nombre"] = nombre
+
+            if telefono:
+                filtro["telefono"] = telefono
+
+            try:
+                db = cliente_autenticado["galgos"]
+                dueños_col = db["dueños"]
+                perros_col = db["perros"]
+                resultados = list(dueños_col.find(filtro))
+
+                if not resultados:
+                    messagebox.showinfo("Sin resultados", "No se encontraron dueños con esos criterios.")
+                    return
+                
+                resultado_ventana = tk.Toplevel(ventana)
+                resultado_ventana.title("Resultados de búsqueda")
+
+                for idx, dueño in enumerate(resultados, start=1):
+                    nombre_db = dueño.get("nombre", "")
+                    telefono_db = dueño.get("telefono", "")
+                    direccion_db= dueño.get("direccion","")
+
+                    # Buscar perros asociados a este dueño
+                    dueño_id = dueño.get("_id")
+                    perros = list(perros_col.find({"dueño_id": dueño_id}))
+
+                    if perros:
+                        nombres_perros = ", ".join([p.get("nombre", "Sin nombre") for p in perros])
+                    else:
+                        nombres_perros = "Sin perros asignados"
+                    texto = (
+                        f"{idx}. Nombre:  {nombre_db}\n"
+                        f" Numero Telefonico:  {telefono_db}\n"
+                        f"Direccion:  {direccion_db}\n"
+                        f"perros asociados:  {nombres_perros}"
+                    )
+                tk.Label(resultado_ventana, text=texto, justify="left", anchor="w", wraplength=500).pack(anchor="w", padx=10, pady=2)
+                
+
+            except Exception as e:
+                messagebox.showerror("Error al buscar", str(e))
+
+
+            print("")
+        ventana_dueño = tk.Toplevel(ventana)
+        ventana_dueño.title("BUSCAR PERROS")
+
+        tk.Label(ventana_dueño, text="Nombre del dueño:").pack(pady=5)
+        nombre_dueño = tk.Entry(ventana_dueño)
+        nombre_dueño.pack(pady=5)
+
+        tk.Label(ventana_dueño, text="numero del dueño:").pack(pady=5)
+        telefono_dueño = tk.Entry(ventana_dueño)
+        telefono_dueño.pack(pady=5)
+
+        tk.Button(ventana_dueño, text="BUSCAR", command=buscar_dueño).pack(pady=10)
+        ventana.title("BUSCAR DUEÑOS")
+
+    def opcion_cuidador():
+        def buscar_cuidador():
+
+
+            nombre=nombre_cuidador.get().strip()
+            telefono=telefono_cuidador.get().strip()
+
+            filtro = {}
+
+            if nombre:
+                filtro["nombre"] = nombre
+
+            if telefono:
+                filtro["telefono"] = telefono
+
+            try:
+                db = cliente_autenticado["galgos"]
+                cuidadores_col = db["cuidadores"]
+                perros_col = db["perros"]
+                resultados = list(cuidadores_col.find(filtro))
+
+                if not resultados:
+                    messagebox.showinfo("Sin resultados", "No se encontraron dueños con esos criterios.")
+                    return
+                
+                resultado_ventana = tk.Toplevel(ventana)
+                resultado_ventana.title("Resultados de búsqueda")
+
+                for idx, cuidador in enumerate(resultados, start=1):
+                    nombre_db = cuidador.get("nombre", "")
+                    telefono_db = cuidador.get("telefono", "")
+                    direccion_db= cuidador.get("direccion","")
+
+                    # Buscar perros asociados a este dueño
+                    cuidador_id = cuidador.get("_id")
+                    perros = list(perros_col.find({"cuidador_id": cuidador_id}))
+
+                    if perros:
+                        nombres_perros = ", ".join([p.get("nombre", "Sin nombre") for p in perros])
+                    else:
+                        nombres_perros = "Sin perros asignados"
+                    texto = (
+                        f"{idx}. Nombre:  {nombre_db}\n"
+                        f" Numero Telefonico:  {telefono_db}\n"
+                        f"Direccion:  {direccion_db}\n"
+                        f"perros asociados:  {nombres_perros}"
+                    )
+                tk.Label(resultado_ventana, text=texto, justify="left", anchor="w", wraplength=500).pack(anchor="w", padx=10, pady=2)
+                
+
+            except Exception as e:
+                messagebox.showerror("Error al buscar", str(e))
+
+
+            print("")
+        ventana_cuidador = tk.Toplevel(ventana)
+        ventana_cuidador.title("BUSCAR CUIDADOR")
+
+        tk.Label(ventana_cuidador, text="Nombre del cuidador:").pack(pady=5)
+        nombre_cuidador = tk.Entry(ventana_cuidador)
+        nombre_cuidador.pack(pady=5)
+
+        tk.Label(ventana_cuidador, text="Numero telefonico del cuidador:").pack(pady=5)
+        telefono_cuidador = tk.Entry(ventana_cuidador)
+        telefono_cuidador.pack(pady=5)
+
+        tk.Button(ventana_cuidador, text="BUSCAR", command=buscar_cuidador).pack(pady=10)
+        ventana.title("BUSCAR CUIDADORES")
+
+    def opcion_carreras():
+        print("buscandooo")
+        def buscar_carreras():
+            try:
+                # 1. Captura de datos desde el formulario
+                fecha_str = f"{dia_var.get()}/{mes_var.get()}/{anio_var.get()}"
+                lugar = origen_perro.get().strip()
+                cantidad = edad_perro.get().strip()
+                division = color_perro.get().strip()
+
+                # 2. Construcción del filtro
+                filtro = {}
+
+                # Convertir fecha a objeto datetime
+                try:
+                    fecha_obj = datetime.strptime(fecha_str, "%d/%m/%Y")
+                    filtro["fecha"] = {
+                        "$gte": datetime(fecha_obj.year, fecha_obj.month, fecha_obj.day),
+                        "$lt": datetime(fecha_obj.year, fecha_obj.month, fecha_obj.day + 1)
+                    }
+                except Exception:
+                    pass  # Si no se puede convertir, no se filtra por fecha
+
+                if lugar:
+                    filtro["lugar"] = lugar
+
+                # Conectar con Mongo
+                db = cliente_autenticado["galgos"]
+                carreras_col = db["carreras"]
+                carreras = carreras_col.find(filtro)
+
+                # Ventana de resultados
+                resultado_ventana = tk.Toplevel(ventana)
+                resultado_ventana.title("Resultados de búsqueda")
+
+                encontrados = 0
+                for idx, carrera in enumerate(carreras, start=1):
+                    resultados = carrera.get("resultados", [])
+                    
+                    # Si se solicitó filtrar por cantidad
+                    if cantidad:
+                        try:
+                            if len(resultados) != int(cantidad):
+                                continue
+                        except ValueError:
+                            pass
+
+                    # Si se solicitó filtrar por división (ej. tiempo máximo permitido)
+                    if division:
+                        try:
+                            tiempo_limite = float(division)
+                            if not all(r.get("tiempo", 0) <= tiempo_limite for r in resultados):
+                                continue
+                        except ValueError:
+                            pass
+
+                    # Mostrar resultado
+                    fecha_db = carrera.get("fecha", "").strftime("%d/%m/%Y %H:%M")
+                    lugar_db = carrera.get("lugar", "")
+                    total_perros = len(resultados)
+                    ganador = str(carrera.get("ganador_id", ""))
+
+                    texto = (
+                        f"{idx}. Fecha: {fecha_db}\n"
+                        f"   Lugar: {lugar_db}\n"
+                        f"   Nº de perros: {total_perros}\n"
+                        f"   Ganador (ID): {ganador}\n"
+                        "------------------------------"
+                    )
+
+                    tk.Label(resultado_ventana, text=texto, justify="left", anchor="w", wraplength=500).pack(anchor="w", padx=10, pady=2)
+                    encontrados += 1
+
+                if encontrados == 0:
+                    tk.Label(resultado_ventana, text="No se encontraron carreras con los criterios dados.").pack(pady=10)
+
+            except Exception as e:
+                messagebox.showerror("Error al buscar", str(e))
+
+
+        ventana_perros = tk.Toplevel()
+        ventana_perros.title("BUSCAR CARRERAS")
+
+        # ===== Fecha (día / mes / año) =====
+        tk.Label(ventana_perros, text="Fecha de carrera:").pack(pady=5)
+
+        # Variables y opciones para día, mes y año
+        dia_var = tk.StringVar()
+        mes_var = tk.StringVar()
+        anio_var = tk.StringVar()
+
+        dias = [str(d) for d in range(1, 32)]
+        meses = [str(m) for m in range(1, 13)]
+        anios = [str(a) for a in range(2020, datetime.now().year + 2)]
+
+        dia_var.set(dias[0])
+        mes_var.set(meses[0])
+        anio_var.set(anios[0])
+
+        # Menús desplegables
+        frame_fecha = tk.Frame(ventana_perros)
+        frame_fecha.pack(pady=5)
+
+        tk.OptionMenu(frame_fecha, dia_var, *dias).pack(side="left")
+        tk.OptionMenu(frame_fecha, mes_var, *meses).pack(side="left")
+        tk.OptionMenu(frame_fecha, anio_var, *anios).pack(side="left")
+
+        # ===== Otros campos =====
+        tk.Label(ventana_perros, text="Lugar de carrera:").pack(pady=5)
+        origen_perro = tk.Entry(ventana_perros)
+        origen_perro.pack(pady=5)
+
+        tk.Label(ventana_perros, text="Cantidad de perros:").pack(pady=5)
+        edad_perro = tk.Entry(ventana_perros)
+        edad_perro.pack(pady=5)
+
+        tk.Label(ventana_perros, text="División por tiempos de perros:").pack(pady=5)
+        color_perro = tk.Entry(ventana_perros)
+        color_perro.pack(pady=5)
+
+        # ===== Botón buscar =====
+        tk.Button(ventana_perros, text="BUSCAR", command=buscar_carreras).pack(pady=10)
 
     # Ventana principal de búsqueda
     global ventana
@@ -221,16 +469,14 @@ def buscar():
     tk.Button(ventana, text="BUSCAR", command=opcion_perro).pack(pady=10)
 
     tk.Label(ventana, text="OPCIÓN BUSCAR DUEÑOS:").pack(pady=5)
-    tk.Button(ventana, text="BUSCAR", command=buscar_dueño).pack(pady=10)
+    tk.Button(ventana, text="BUSCAR", command=opcion_dueño).pack(pady=10)
 
     tk.Label(ventana, text="OPCIÓN BUSCAR CUIDADORES:").pack(pady=5)
-    tk.Button(ventana, text="BUSCAR", command=buscar_cuidador).pack(pady=10)
+    tk.Button(ventana, text="BUSCAR", command=opcion_cuidador).pack(pady=10)
 
     tk.Label(ventana, text="OPCIÓN BUSCAR CARRERAS:").pack(pady=5)
-    tk.Button(ventana, text="BUSCAR", command=buscar_carreras).pack(pady=10)
+    tk.Button(ventana, text="BUSCAR", command=opcion_carreras).pack(pady=10)
 
-
-    
 def eliminar():
     print("eliminando")
 #menu
@@ -247,19 +493,16 @@ tk.Label(encabezado,
          fg="#f0f0f0",
          pady=10).pack(pady=10)
 
-#imagen
+#imagenes
 img_izq = Image.open("images/carreras-de-galgos-c-galgo-libre-1.png").resize((500, 500))
 foto_izq = ImageTk.PhotoImage(img_izq)
 tk.Label( image=foto_izq, bg="#4CAF50").pack(side="left", padx=10)
-#imagen
 img_der = Image.open("images/pbox.png").resize((500, 500))
 foto_der = ImageTk.PhotoImage(img_der)
 tk.Label( image=foto_der, bg="#4CAF50").pack(side="right", padx=10)
-
 img_abajo = Image.open("images/logo_final.png").resize((400,200))
 foto_abajo = ImageTk.PhotoImage(img_abajo)
 tk.Label( image=foto_abajo).pack(side="bottom", padx=10)
-
 img_log = Image.open("images/greyhound-speed-flame-silhouette-abstract-racing-hound-white-background-50611162-_1_-_1_.png",).resize((200,100))
 foto_log = ImageTk.PhotoImage(img_log)
 tk.Label(encabezado, image=foto_log,bg="#8A9A5B").pack(side="top", padx=10,)
